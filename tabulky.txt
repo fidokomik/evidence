@@ -1,0 +1,78 @@
+Evidence používá ke své činnosti několik vlastních tabulek, které jsou v databázi spolu s tabulkami phpbb. 
+Všechny tyto tabulky mají pro odlišení prefix "evidence_".
+
+Tabulka evidence_clenstvi:
+
+CREATE TABLE `evidence_clenstvi` (
+  `user_id` mediumint(8) unsigned NOT NULL DEFAULT '0',
+  `group_id` mediumint(8) unsigned NOT NULL DEFAULT '0',
+  `vedouci` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `funkce` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `datum_od` date NOT NULL DEFAULT '0000-00-00',
+  `datum_do` date DEFAULT NULL,
+  PRIMARY KEY (`user_id`,`group_id`,`vedouci`,`funkce`,`datum_od`),
+  KEY `od_do` (`datum_od`,`datum_do`),
+  KEY `datum_do` (`datum_do`),
+  KEY `group_id` (`group_id`),
+  KEY `hlavni` (`user_id`,`group_id`,`vedouci`,`funkce`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_czech_ci ROW_FORMAT=FIXED COMMENT='logovani clenstvi ve skupinach';
+
+Slouží pro ukládání změn (logování) ve složení vybraných skupin phpbb. Seznam skupin je uložen v tabulce evidence_setup
+a editovat jej může administrátor Evidence přímo v rozhraní (index.cgi).
+
+----------------------------------------------------------------------------------------
+
+Tabulka evidence_dokumenty:
+
+CREATE TABLE `evidence_dokumenty` (
+  `id` bigint(14) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT 'user_id z tabulky phpbb_users',
+  `soubor` varchar(255) COLLATE utf8_czech_ci NOT NULL DEFAULT '' COMMENT 'jmeno souboru',
+  `vlozeno` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'datum ulozeni',
+  `vlozil` varchar(255) COLLATE utf8_czech_ci NOT NULL DEFAULT '' COMMENT 'kdo vlozil',
+  `aktualizace` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'datum aktualizace',
+  `aktualizoval` varchar(255) COLLATE utf8_czech_ci NOT NULL DEFAULT '' COMMENT 'kdo aktualizoval',
+  `zneplatneno` datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT 'datum zneplatneni',
+  `zneplatnil` varchar(255) COLLATE utf8_czech_ci NOT NULL DEFAULT '' COMMENT 'kdo zneplatnil',
+  `smi_cist` text COLLATE utf8_czech_ci NOT NULL COMMENT 'kdo muze cist soubor',
+  `smi_menit` text COLLATE utf8_czech_ci NOT NULL COMMENT 'kdo muze menit soubor',
+  `druh` tinyint(2) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_file` (`user_id`,`soubor`)
+) ENGINE=MyISAM AUTO_INCREMENT=249 DEFAULT CHARSET=utf8 COLLATE=utf8_czech_ci ROW_FORMAT=DYNAMIC COMMENT='seznam evidovanych dokumentu';
+
+Tabulka slouží pro evidenci souborů jednotlivých členů a nastavení přístupových práv k těmto dokumentům.
+Dokumenty jsou ukládány v samostatné složce na disku, kam ale není přístup z Apache. Stažení nebo zobrazení souboru
+zajišťuje skript filesend.cgi.
+
+----------------------------------------------------------------------------------------
+
+Tabulka evidence_prava:
+
+CREATE TABLE `evidence_prava` (
+  `funkce` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'cislo funkce',
+  `popis` varchar(255) COLLATE utf8_czech_ci NOT NULL DEFAULT '' COMMENT 'textovy popis funkce',
+  `smi_videt` text COLLATE utf8_czech_ci NOT NULL COMMENT 'seznam skupin a jednotlivcu, kdo smi videt data',
+  `smi_menit` text COLLATE utf8_czech_ci NOT NULL COMMENT 'seznam skupin a jednotlivcu, kdo smi editovat data',
+  PRIMARY KEY (`funkce`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_czech_ci ROW_FORMAT=DYNAMIC COMMENT='nastaveni prav k aplikaci';
+
+Tabulka slouží k nastavení přístupových práv k jednotlivýcm položkám menu. Nastavuje se samostatně právo na čtení
+a právo na zápis. Lze nastavit přístup skupině nebo jednotlivci.
+
+----------------------------------------------------------------------------------------
+
+Tabulka evidence_setup:
+
+CREATE TABLE `evidence_setup` (
+  `name` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `number` bigint(13) NOT NULL DEFAULT '0',
+  `string` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `text` text CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+  `editable` enum('number','string','text','strset','txtset') COLLATE utf8_bin NOT NULL DEFAULT 'text',
+  `comment` varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT '' COMMENT 'vysvetlivky',
+  PRIMARY KEY (`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_bin ROW_FORMAT=DYNAMIC COMMENT='nastaveni pro aplikaci evidence clenu';
+
+Tabulka slouží k nastavení parametrů a chování Evidence na podobném principu, jako je nastavení phpbb přes tabulku
+phpbb_config. Místo textového konfiguračního souboru je tedy nastavené uložené do tabulky.
