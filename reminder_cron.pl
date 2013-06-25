@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Author: Petr Vileta, 2012
+# Author: Petr Vileta, 2012 
 # License: WTFPL - Do What The Fuck You Want To Public License, http://sam.zoy.org/wtfpl/
 
 use strict;
